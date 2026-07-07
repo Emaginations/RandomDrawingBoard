@@ -285,12 +285,20 @@ class DrawingBoard:
                 pt[1] - self.auto_last_pos[1],
             )
             gc = self._consume_gradient(seg_dist)
-            color = gc if gc is not None else self.auto_color
+            if gc is not None:
+                color = gc
+                if not self.gradient_active:
+                    self.auto_color = self.gradient_to
+            else:
+                color = self.auto_color
             pygame.draw.line(self.auto_surface, color,
                              self.auto_last_pos, pt, 2)
         else:
             gc = self._gradient_color()
-            color = gc if gc is not None else self.auto_color
+            if gc is not None:
+                color = gc
+            else:
+                color = self.auto_color
             pygame.draw.circle(self.auto_surface, color, pt, 1)
         self.auto_last_pos = pt
 
@@ -322,6 +330,23 @@ class DrawingBoard:
         self.auto_drawing = False
         self.auto_type = None
         self.idle_threshold = random.uniform(IDLE_MIN, IDLE_MAX)
+
+    # ═══════════════════════════════════════════════════════
+    #  SAVE CANVAS
+    # ═══════════════════════════════════════════════════════
+    def _save_canvas(self):
+        """Merge all surfaces and save as PNG next to the exe/script."""
+        import os
+        import datetime
+        merged = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
+        merged.fill(WHITE)
+        merged.blit(self.user_surface, (0, 0))
+        merged.blit(self.auto_surface, (0, 0))
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+        filename = os.path.join(base_dir, f"drawing_{ts}.png")
+        pygame.image.save(merged, filename)
+        print(f"[save] {filename}")
 
     # ═══════════════════════════════════════════════════════
     #  GRADIENT SYSTEM
@@ -395,7 +420,12 @@ class DrawingBoard:
                             event.pos[1] - self.last_draw_pos[1],
                         )
                         gc = self._consume_gradient(seg_dist)
-                        color = gc if gc is not None else self.brush_color
+                        if gc is not None:
+                            color = gc
+                            if not self.gradient_active:
+                                self.brush_color = self.gradient_to
+                        else:
+                            color = self.brush_color
                         pygame.draw.line(
                             self.user_surface, color,
                             self.last_draw_pos, event.pos, 2,
@@ -412,25 +442,29 @@ class DrawingBoard:
                         self._stop_auto_draw()
 
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_c:
+                if event.key == pygame.K_c and not (event.mod & pygame.KMOD_CTRL):
                     self.user_surface.fill(WHITE)
                     self.auto_surface.fill(WHITE)
                     self.draw_points.clear()
                     self.auto_last_pos = None
                     self.last_manual_point = None
-                elif event.key == pygame.K_SPACE:
-                    if self.auto_drawing:
-                        self._stop_auto_draw()
-                    else:
-                        self._start_auto_draw()
+                elif event.key == pygame.K_s and (event.mod & pygame.KMOD_CTRL):
+                    self._save_canvas()
                 elif event.key == pygame.K_p:
-                    self.brush_color = (
-                        random.randint(0, 255),
-                        random.randint(0, 255),
-                        random.randint(0, 255),
-                    )
+                    new_c = (random.randint(0, 255),
+                             random.randint(0, 255),
+                             random.randint(0, 255))
+                    if self.auto_drawing:
+                        self.auto_color = new_c
+                        print(f"[pen] auto color: {new_c}")
+                    else:
+                        self.brush_color = new_c
+                        print(f"[pen] manual color: {new_c}")
                 elif event.key == pygame.K_o:
-                    self._start_gradient(self.brush_color)
+                    if self.auto_drawing:
+                        self._start_gradient(self.auto_color)
+                    else:
+                        self._start_gradient(self.brush_color)
                 elif event.key == pygame.K_ESCAPE:
                     self.running = False
 
@@ -534,7 +568,7 @@ class DrawingBoard:
             f"Move: {move_dur:.1f}s  |  777: {'READY' if move_dur >= 10 and not self.checked_777 else '--'}  |  "
             f"Port: {PORT}",
             f"Brush: {self.brush_color}  |  Auto: {self.auto_color}  |  "
-            f"[C]lear  [P]en  [O]Gradient  [Space]Auto  [Esc]Quit",
+            f"[C]lear  [P]en  [O]Gradient  [Ctrl+S]Save  [Esc]Quit",
             f"Spiral(blue)  Brownian(green)  Circle(orange)",
         ]
         for i, line in enumerate(lines):
@@ -557,9 +591,9 @@ class DrawingBoard:
         print("    Left-drag   - free draw")
         print("    Idle 10-39s - auto draw from line endpoint")
         print("    C key       - clear canvas")
-        print("    P key       - random brush color")
+        print("    P key       - random brush color (manual or auto)")
         print("    O key       - gradient to random color (10 cm)")
-        print("    Space       - toggle auto-draw")
+        print("    Ctrl+S      - save canvas to PNG")
         print("    Esc         - quit")
         print("=" * 55)
 
