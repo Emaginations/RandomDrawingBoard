@@ -3,7 +3,7 @@
 ## 项目状态
 
 #### ✅写完了
-#### 🚧正在测
+#### ✅测好了
 
 ## 功能
 
@@ -18,7 +18,6 @@
 - **画笔颜色**: 按 `P` 键随机切换画笔颜色（自动/手动模式均生效）
 - **渐变色过渡**: 按 `O` 键从当前颜色渐变到随机新颜色，过渡长度 10 cm（约 378px）
 - **777 机制**: 鼠标连续移动满 10 秒后，有 7.77% 概率自动触发随机颜色渐变
-- **保存画布**: `Ctrl+S` 将当前画面保存为带时间戳的 PNG，位于 EXE 同目录
 
 ## 控制
 
@@ -30,24 +29,11 @@
 | `C` 键 | 清空画布 |
 | `P` 键 | 随机画笔颜色（手动/自动均生效） |
 | `O` 键 | 启动 10cm 渐变过渡到随机颜色 |
-| `Ctrl+S` | 保存画布为 PNG |
 | `Esc` 键 | 退出程序 |
 
 ## 安装与运行
 
-```bash
-pip install pygame
-python drawing_board.py
-```
-
-## 编译为 EXE
-
-```bash
-pip install pyinstaller
-pyinstaller --onefile --noconsole --name DrawingBoard drawing_board.py
-```
-
-生成文件位于 `dist/DrawingBoard.exe`。
+请在release中下载exe，双击运行。
 
 ## 网络指令
 
@@ -69,7 +55,8 @@ DrawingBoard/
   NOREADME.md       AI 对话记录
   .gitignore        Git 忽略规则
 ```
-
+## 效果预览
+![预览](./新建文件夹/Snipaste_2026-07-08_01-59-33.jpg)
 ## 作者
 
 QQ: 331701160
